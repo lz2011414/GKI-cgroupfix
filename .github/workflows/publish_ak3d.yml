@@ -1,0 +1,39 @@
+name: Publish AnyKernel3 to release (matched build)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 下载构件并打包
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh run download 37466870985 -R ${{ github.repository }} -n "6.6.118-android15-2026-01-ReSukiSU-AnyKernel3" -D ak3
+          ls -la ak3
+          cd ak3
+          zip -9 -r ../AnyKernel3_6.6.118_ReSukiSU_matched.zip .
+          cd ..
+          ls -l AnyKernel3_6.6.118_ReSukiSU_matched.zip
+
+      - name: 删除旧 release(避免撞名)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete cgroupfix-6.6.118 -R ${{ github.repository }} --yes --cleanup-tag || true
+          sleep 3
+
+      - name: 发布到 Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create cgroupfix-6.6.118 AnyKernel3_6.6.118_ReSukiSU_matched.zip \
+            -R ${{ github.repository }} \
+            --title "6.6.118 matched build (ReSukiSU / 4k / no-SUSFS)" \
+            --notes "AOSP GKI android15-6.6 @ 6.6.118. ReSukiSU without SUSFS (matches working kernel). NTSync on. DroidSpaces with IPv6 NAT only. No cgroup patch."
