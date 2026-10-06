@@ -87,6 +87,20 @@ runs:
         echo >> "${{ github.workspace }}/kernel/common/ipc/msgutil.c"
         echo 'EXPORT_SYMBOL_GPL(init_ipc_ns);' >> "${{ github.workspace }}/kernel/common/ipc/msgutil.c"
 
+    - name: Apply cgroup limits kABI-safe patch (CPU/PIDs limits)
+      shell: bash
+      if: inputs.version == 'android15-6.6' || inputs.version == 'android14-6.1'
+      working-directory: ${{ github.workspace }}/kernel/common
+      run: |
+        curl -fsSL -o ./fix_cgroup_limits_kabi.patch https://raw.githubusercontent.com/Goldzxcbug/sm8750_Droidspaces/main/droidspaces_patch/fix_cgroup_limits_kabi_6.6.89.patch
+        if git apply --check ./fix_cgroup_limits_kabi.patch 2>/dev/null; then
+          git apply ./fix_cgroup_limits_kabi.patch
+          echo "[cgroupfix] patch applied (exact)"
+        else
+          patch -p1 -F 3 < ./fix_cgroup_limits_kabi.patch
+          echo "[cgroupfix] patch applied (fuzz)"
+        fi
+
     - name: Enable Kernel Configs
       uses: ./.github/actions/set-kernel-config
       with:
@@ -100,4 +114,10 @@ runs:
           CONFIG_BINFMT_SCRIPT=y
           CONFIG_BINFMT_ELF=y
           CONFIG_USER_NS=y
+          # [cgroupfix] IPv6 NAT (kABI-safe)
+          CONFIG_IP6_NF_NAT=y
+          CONFIG_IP6_NF_TARGET_MASQUERADE=y
+          # [cgroupfix] CPU/PIDs limits (requires kABI-safe patch below)
+          CONFIG_CFS_BANDWIDTH=y
+          CONFIG_CGROUP_PIDS=y
 
