@@ -15,7 +15,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh run download 37457454269 -R ${{ github.repository }} -n "6.6.118-android15-2026-01-ReSukiSU-AnyKernel3" -D ak3
+          gh run download 37465431111 -R ${{ github.repository }} -n "6.6.118-android15-2026-01-ReSukiSU-AnyKernel3" -D ak3
           ls -la ak3
           cd ak3
           zip -9 -r ../AnyKernel3_6.6.118_ReSukiSU_cgroupfix.zip .
